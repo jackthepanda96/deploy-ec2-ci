@@ -1,0 +1,218 @@
+openapi: '3.0.2'
+info:
+  title: Belajar OpenAPI
+  description: Dokumen ini dibuat untuk media belajar Open API
+  contact:
+    name: Jerry
+    email: jerry@alterra.id
+  version: '1.0'
+servers:
+  - url: https://dev.server.test/v1
+    description: "link akses api"
+  - url: https://prod.server.test/{version}
+    description: "contoh link akses dengan pilihan"
+    variables:
+      version:
+        default: v1
+        enum:
+          - v1
+          - v2
+          - v3
+tags:
+  - name: User
+    description: Kumpulan API untuk akses data user
+    externalDocs:
+      url: http://www.wikipedia.com
+      description: Reference Link
+  - name: Book
+    description: Kumpulan API untuk akses data buku
+paths:
+  /users:
+    get:
+      description: Get all user
+      tags:
+        - "User"
+      responses:
+        '200':
+          description: OK
+    post:
+      description: Insert user
+      tags:
+        - "User"
+      requestBody:
+        description: Data user untuk disimpan
+        required: true
+        content:
+          application/json:
+            schema:
+              # type: object
+              # properties:
+              #   name:
+              #     type: string
+              #   email:
+              #     type: string
+              #   gender:
+              #     type: string
+              #   password:
+              #     type: string
+              #     format: password
+              $ref: '#/components/schemas/User'
+            examples:
+              json input:
+                description: Contoh parameter add user
+                value:
+                  name: Jon
+                  email: jon@jon.com
+                  gender: L
+                  password: jon123  
+      responses:
+        '201':
+          $ref: "#/components/responses/ResponInsertUser"
+        '400':
+          description: "invalid data"
+  /users/{userID}:
+    delete:
+      security:
+        - JWTAuth : []
+      description: Delete user by id
+      tags:
+        - "User"
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          description: Todolist id for update
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /user:    
+    get:
+      description: Get user by name
+      tags:
+        - "User"
+      parameters:
+        - name: nama
+          in: query
+          required: true
+          description: nama user yang dicari
+          schema:
+            type: string
+            nullable: false
+        - name: password
+          in: query
+          required: true
+          description: password user yang dicari
+          schema:
+            type: string
+            format: password
+            nullable: false
+      responses:
+        '200':
+          $ref: '#/components/responses/StatusOK'
+  /verify:
+    post:
+      tags:
+        - "User"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+            examples:
+              success:
+                description: Contoh parameter input verify
+                value:
+                  email: jerry@jerry.com
+                  password: jerry123
+      responses:
+        '200':
+          description: OK
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              examples:
+                success:
+                  description: Return data user dengan token terupdate
+                  value:
+                    ID: 5
+                    name: Jerry
+                    email: jerry@jerry.com
+                    gender: L
+                    password: jerry123
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE2MzQwNTM5NTMsInVzZXJJRCI6Nn0.I1gNrEBBk-NqE9xYQH6qKDr_PD0pOFdnpHSYs_GOmUc
+        '401':
+          description:
+          $ref: "#/components/responses/UnauthorizedError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        ID:
+          type: number
+        name:
+          type: string
+        email:
+          type: string
+        gender:
+          type: string
+        password:
+          type: string
+          format: password
+        token:
+          type: string
+    Book:
+      type: object
+      properties:
+        ID:
+          type: number
+        Title:
+          type: string
+        Author:
+          type: string
+        User:
+          type: object
+          properties:
+            schema:
+              $ref:  "#/components/schemas/User"           
+  responses:
+    StatusOK:
+      description: OK 
+    UnauthorizedError:
+      description: Access token is missing or invalid
+    ResponInsertUser:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  schema:
+                    $ref:  "#/components/schemas/User"                
+              message:
+                type: string
+          example:
+            data:
+              ID: 8
+              name: Jon
+              email: jon@jon.com
+              gender: jon
+              password: jon123
+              token: ""
+            message: success add user  
+      description: OK
+
+        
